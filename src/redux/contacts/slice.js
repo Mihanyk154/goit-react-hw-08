@@ -1,9 +1,10 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
-import { fetchContacts, addContact, deleteContact } from './contactsOps';
-import { selectNameFilter } from '../redux/filtersSlice';
+import { createSlice } from "@reduxjs/toolkit";
+import { fetchContacts, addContact, deleteContact } from './operations';
+
+import { logOut } from "../auth/operations";
 
 
-const handlePending = state => {
+export const handlePending = state => {
     state.error = null;
     state.loading = true;
 };
@@ -14,6 +15,19 @@ const contactsSlice = createSlice({
         items: [],
         loading: false,
         error: null,
+        modal: false,
+        contactName: null,
+    },
+    reducers: {
+        openModal: (state) => {
+            state.modal = true;
+        },
+        closeModal: (state) => {
+            state.modal = false;
+        },
+        setContactName: (state, action) => {
+            state.contactName = action.payload;
+        }
     },
     extraReducers: builder => {
         builder
@@ -44,19 +58,15 @@ const contactsSlice = createSlice({
                 state.loading = false;
                 state.error = "Failed to delete contact ";
             })
+            .addCase(logOut.fulfilled, (state) => {
+                state.items = [];
+                state.loading = false;
+                state.error = null;
+            })
+
     }
 });
 
-export const selectContacts = state =>
-    state.contacts.items;
-
-
-export const selectFilteredContacts = createSelector(
-    [selectContacts, selectNameFilter], (visibleContacts, filter) => {
-        return visibleContacts.filter(contact =>
-            contact.name.toLowerCase().includes(filter.toLowerCase()))
-    }
-)
-
+export const { openModal, closeModal, setContactName } = contactsSlice.actions;
 
 export default contactsSlice.reducer;
